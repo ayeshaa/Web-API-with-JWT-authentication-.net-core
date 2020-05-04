@@ -13,6 +13,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authorization;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using WojciechKaszycki.Authentication;
 
 namespace WojciechKaszycki.Controllers
 {
@@ -60,45 +61,30 @@ namespace WojciechKaszycki.Controllers
         private string GenerateToken(string username, int expireMinutes = 30)
         {
             var symmetricKey = Convert.FromBase64String(Secret);
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Secret));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var tokenHandler = new JwtSecurityTokenHandler();
-            var claims = new[] {
-        new Claim(JwtRegisteredClaimNames.Sub, username),
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-    };
-            var token = new JwtSecurityToken(config["Jwt:Issuer"],
-                                             config["Jwt:Issuer"],
-                                             claims,
-                                             expires: DateTime.Now.AddMinutes(120),
-                                             signingCredentials: credentials);
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            var now = DateTime.UtcNow;
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                        {
+                            new Claim(ClaimTypes.Name, username)
+                        }),
 
-            //    var now = DateTime.UtcNow;
-            //    var tokenDescriptor = new SecurityTokenDescriptor
-            //    {
-            //        Subject = new ClaimsIdentity(new[]
-            //        {
-            //    new Claim(ClaimTypes.Name, username)
-            //}),
+                Expires = now.AddMinutes(Convert.ToInt32(expireMinutes)),
 
-            //        Expires = now.AddMinutes(Convert.ToInt32(expireMinutes)),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(symmetricKey), SecurityAlgorithms.HmacSha256Signature)
+            };
 
-            //        SigningCredentials = new SigningCredentials(
-            //            new SymmetricSecurityKey(symmetricKey),
-            //            SecurityAlgorithms.HmacSha256Signature)
-            //    };
+            SecurityToken securityToken = tokenHandler.CreateToken(tokenDescriptor);
+            var token = tokenHandler.WriteToken(securityToken);
 
-            //    var stoken = tokenHandler.CreateToken(tokenDescriptor);
-            //    var token = tokenHandler.WriteToken(stoken);
-
-            //    return token;
+            return token;
         }
         
 
 
-        [Route("getcountries")]
+        [JwtAuthentication, Route("getcountries")]
         public async Task<List<Country>> GetAsync(string filter)
         {
             using (var client = new HttpClient())
@@ -110,7 +96,7 @@ namespace WojciechKaszycki.Controllers
                 return filteredResults.ToList();
             }
         }
-        [Authorize]
+        [JwtAuthentication]
         [Route("test")]
         public ActionResult<IEnumerable<string>> Get()
         {

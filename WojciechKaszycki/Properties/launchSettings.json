@@ -13,7 +13,8 @@
       "commandName": "IISExpress",
       "launchBrowser": true,
       //"launchUrl": "weatherforecast",
-      "launchUrl": "api/Countries/signup?username=ayesha&password=ayesha",
+      //"launchUrl": "api/Countries/signup?username=ayesha&password=ayesha",
+      "launchUrl": "api/Countries/test",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
