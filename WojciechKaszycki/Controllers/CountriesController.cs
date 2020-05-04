@@ -98,7 +98,7 @@ namespace WojciechKaszycki.Controllers
         
 
 
-        [Authorize, Route("getcountries")]
+        [Route("getcountries")]
         public async Task<List<Country>> GetAsync(string filter)
         {
             using (var client = new HttpClient())
