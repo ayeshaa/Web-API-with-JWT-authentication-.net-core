@@ -98,7 +98,7 @@ namespace WojciechKaszycki.Controllers
         
 
 
-        [Route("getcountries")]
+        [Authorize, Route("getcountries")]
         public async Task<List<Country>> GetAsync(string filter)
         {
             using (var client = new HttpClient())
@@ -108,6 +108,28 @@ namespace WojciechKaszycki.Controllers
                 var response = JsonConvert.DeserializeObject<List<Country>>(content);
                 var filteredResults = response.Where(x => x.name.Contains(filter));
                 return filteredResults.ToList();
+            }
+        }
+        [Authorize]
+        [Route("test")]
+        public ActionResult<IEnumerable<string>> Get()
+        {
+            var currentUser = HttpContext.User;
+            int spendingTimeWithCompany = 0;
+
+            if (currentUser.HasClaim(c => c.Type == "DateOfJoing"))
+            {
+                DateTime date = DateTime.Parse(currentUser.Claims.FirstOrDefault(c => c.Type == "DateOfJoing").Value);
+                spendingTimeWithCompany = DateTime.Today.Year - date.Year;
+            }
+
+            if (spendingTimeWithCompany > 5)
+            {
+                return new string[] { "High Time1", "High Time2", "High Time3", "High Time4", "High Time5" };
+            }
+            else
+            {
+                return new string[] { "value1", "value2", "value3", "value4", "value5" };
             }
         }
     }
